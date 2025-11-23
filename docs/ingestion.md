@@ -1,29 +1,33 @@
-# Ingestion Layer
+# Ingestion Plan
 
-## Sources & Formats
-- **Satellite**: Periodic batch JSON (e.g., GHGSat, Carbon Mapper)
-- **Sensors**: MQTT streams from on-site devices
-- **SCADA**: REST webhooks or batch JSON payloads
-- **Aerial**: GeoJSON or CSV uploads (field or contractor provided)
+## Sources and Connectors
+| Source Type | Examples | Frequency | Connector | Notes |
+| --- | --- | --- | --- | --- |
+| Relational DBs | Production operations, maintenance logs | Hourly | CDC pipeline (Debezium) | Schema versioning enforced at registry |
+| Object Storage | Historical sensor dumps, lab reports | Daily | Batch pull via signed URLs | Size-aware chunking with retries |
+| Streaming | Real-time sensors, telemetry | Sub-minute | Kafka topics (Protobuf) | Exactly-once semantics with checkpoints |
+| Third-Party APIs | Market/price feeds | 15 minutes | REST with OAuth | Rate-limit aware retry/backoff |
 
-## Functional Requirements
-- Normalize timestamps to UTC across all payloads.
-- Assign deterministic geo-temporal event IDs (geohash/H3 + time bucket).
-- Validate schemas and enforce minimum confidence thresholds.
-- Persist raw and normalized payloads for audit and replay.
+## Validation & Normalization
+- Schema validation (Avro/Protobuf) with automatic rejection queues and alerting.
+- Standardization of units, timestamps (UTC), and well IDs to canonical identifiers.
+- PII stripping/masking before persistence; hashed identifiers for joins.
 
-## Processing Steps
-1. **Schema Validation**: Pydantic models enforce structure; reject or quarantine invalid payloads.
-2. **Timestamp Normalization**: Convert source timestamps to UTC and record source timezone.
-3. **ID Assignment**: Compute geospatial hash and combine with time bucket for stable event IDs.
-4. **Storage**: Write raw payloads to object storage (S3) and normalized records to Postgres; enqueue to Kafka for downstream fusion.
+## Landing & Curation
+| Layer | Storage | Purpose | Retention | Access |
+| --- | --- | --- | --- | --- |
+| Raw Landing | Object storage (gzip Parquet) | Immutable snapshots | 30 days | Restricted to platform admins |
+| Staging | Append-only tables | QA replay, backfills | 90 days | Data engineering, QA |
+| Curated | Partitioned tables | Feature-ready datasets | 400 days | Feature, model, and analytics consumers |
 
-## Data Contracts
-- Payloads must include coordinates, observed time, source ID, confidence score, and facility/site reference where available.
-- Optional metadata (sensor health, orbital pass, flight ID) is preserved in the audit trail.
+## Fusion & Feature Readiness
+- Deterministic joins on well ID + time windows.
+- Rules-based enrichment (e.g., geology attributes) with audit fields.
+- Late-arriving data triggers partial recompute via incremental DAG runs.
 
-## Interfaces (Planned)
-- **MQTT client** subscribes to sensor topics, forwards to ingestion pipeline.
-- **REST endpoint** for SCADA webhooks (`/ingest/scada`).
-- **Upload endpoint** for aerial CSV/GeoJSON with schema validation and preview responses.
-- **Batch loader** for satellite JSON drops with idempotent processing.
+## Operational Controls
+- Idempotent ingestion jobs with watermarking and DLQs for malformed records.
+- Observability via metrics (lag, throughput), structured logs, and lineage events.
+- Runbooks for connector rotation, credential refresh, and backfill procedures.
+
+See `docs/architecture.md` for upstream/downstream context.

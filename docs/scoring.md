@@ -1,30 +1,33 @@
-# Scoring & Explainability
+# Scoring & Model Serving
 
-## Inputs
-- Source type (satellite, sensor, SCADA, aerial)
-- Confidence levels and detection strength
-- Detection frequency/persistence
-- Facility type and criticality score (customer provided)
-- Signal age and source latency
+## Inputs & Outputs
+| Stage | Inputs | Outputs | Storage | Notes |
+| --- | --- | --- | --- | --- |
+| Feature Load | Curated tables, feature store snapshots | In-memory feature vectors | Scoring nodes | Time-windowed joins applied at load |
+| Model Execution | Feature vectors, model artifacts | Raw predictions, intermediate tensors | Scoring nodes | Batch and streaming runners share codepaths |
+| Post-Processing | Raw predictions | Calibrated scores, thresholds, explanations | Results store (Parquet + OLTP) | Conformal calibration + rule-based overrides |
+| Publication | Calibrated scores, metadata | API/gRPC responses, Kafka events | API gateway, topics | SLA-backed responses with tracing IDs |
 
-## Model Approach
-- **Primary**: LightGBM/XGBoost ranking model trained on historical leak/repair data.
-- **Fallback**: Rule-based scorer for sparse data or edge cases.
-- **Preprocessing**: Feature scaling, encoding, and thresholding for robustness.
-- **Validation**: Enforce score range [0,1], uniqueness of ranks, and drift detection on inputs.
+## Fusion Logic
+- Rule priority: deterministic joins (well ID + time), then enrichment, then conflict resolution via freshness + trust scores.
+- Feature derivations logged with versioned transformation specs to enable replay.
+- Data drift detection hooks emit signals to QA/audit layer when feature distributions shift.
 
-## Outputs
-- Score (0–1)
-- Priority rank
-- Confidence band (e.g., high/medium/low)
-- Rationale vector for explainability
+## Serving Topology
+- **Batch:** scheduled DAGs reading curated partitions, writing scored Parquet and warehouse tables.
+- **Streaming:** low-latency microservice consuming Kafka, stateless per-request feature lookup cache.
+- **Canarying:** subset of traffic scored with new models; dual-write outputs for comparison.
+- **Failover:** multi-AZ deployments with health-checked load balancers; circuit breakers around model RPC calls.
 
-## Explainability Layer
-- SHAP values for ML predictions.
-- Rule-based rationale strings for fallback paths.
-- UI-ready explanations, e.g., “Persistent high-confidence leak near compressor station.”
+## Feedback Mechanisms
+| Source | Mechanism | Usage |
+| --- | --- | --- |
+| User labels / overrides | API feedback endpoint | Rapid correction of mis-scored entities |
+| Downstream system errors | Dead-letter topics + dashboards | Identify systemic feature gaps |
+| Data quality findings | QA alerts routed to scoring backlog | Prioritize feature fixes and retraining |
+| Business KPI shifts | Weekly review with product stakeholders | Adjust thresholds and calibration |
 
-## Feedback Loop
-- REST endpoint and batch CSV upload to collect feedback: confirmed leak, false positive, already repaired.
-- Feedback entries include reviewer ID, timestamp, and status updates.
-- Signals feed retraining and threshold adjustments.
+## Observability
+- Metrics: latency p50/p95, throughput, queue depth, model accuracy by segment.
+- Tracing: distributed tracing IDs propagated from ingestion through scoring to outputs.
+- Logging: structured, PII-scrubbed logs with request IDs; searchable in SIEM.

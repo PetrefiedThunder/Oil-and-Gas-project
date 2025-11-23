@@ -1,32 +1,48 @@
-# Methane Leak Prioritization Engine (MLPE) Architecture
+# MLPE System Architecture
 
-## System Overview
-The MLPE orchestrates data ingestion, normalization, scoring, and delivery to rank methane leak events for operational response. Core services are containerized and deployable on AWS ECS/Fargate or GCP Cloud Run with persistent storage on Postgres and S3.
+## Overview
+The Machine Learning Production Environment (MLPE) orchestrates data ingestion, fusion, scoring, QA/audit, and deployment within a shared control plane. It uses modular services to isolate concerns while enabling continuous feedback loops from downstream consumers back into model improvement.
 
-## Module Map
-- **Ingestion Layer**: Collects satellite, sensor MQTT, SCADA, and aerial uploads, stores raw payloads, and validates schemas and confidence.
-- **Normalization & Fusion Engine**: Aligns detections across space and time using geospatial hashing and time-window bucketing to produce composite leak events with full audit traces.
-- **Scoring Engine**: Ranks leak events via ML or rule-based logic, emitting scores, ranks, confidence bands, and rationales.
-- **Output API Layer**: Exposes REST endpoints and webhooks for CMMS integrations and export formats (CSV/JSON/PDF).
-- **Feedback Module**: Captures field-confirmed statuses to improve scoring and retraining loops.
-- **Explainability Layer**: Generates SHAP-based and rule-backed rationales for transparency.
-- **Audit & Assurance Layer**: Tracks data lineage, integrity, QA benchmarks, and model drift.
+## High-Level Flow
+1. Source connectors pull batch and streaming data into the landing zone.
+2. Ingestion services validate, normalize, and route records into curated stores.
+3. Fusion logic assembles feature-ready datasets via deterministic joins and enrichment rules.
+4. Scoring services load the fused datasets, execute models, and persist outputs with lineage.
+5. QA and audit layers monitor data quality, model health, and compliance guardrails.
+6. Delivery pipelines promote artifacts to pre-prod/prod with automated smoke and regression testing.
 
-## Data Flow Summary
-1. Raw payloads are validated, timestamp-normalized to UTC, and assigned geo-temporal event IDs.
-2. Fusion clusters detections by H3/geohash and ±60 minute windows, merging metadata into composite events.
-3. Scoring consumes normalized events plus facility criticality to produce ranked outputs with rationale vectors.
-4. Feedback records updates (confirmed, false positive, repaired) that feed retraining pipelines.
-5. Output APIs deliver ranked leaks to CMMS webhooks or exports, while audit logging maintains traceability.
+## Component Diagram
+```mermaid
+graph TD
+  A[External Sources] -->|Connectors| B[Ingestion Service]
+  B --> C[Raw Landing]
+  C --> D[Validation & Normalization]
+  D --> E[Curated Store]
+  E --> F[Fusion Engine]
+  F --> G[Feature Store]
+  G --> H[Scoring Service]
+  H --> I[Outputs & Lineage]
+  I --> J[QA/Audit Layer]
+  J --> K[Monitoring & Alerts]
+  I --> L[Feedback Loop]
+  L --> F
+  K --> M[Deployment Pipeline]
+  M --> N[Pre-Prod/Prod Targets]
+```
 
-## Deployment & Operations
-- Containerized services with CI/CD (GitHub Actions/GitLab CI) and orchestration via Airflow/Prefect.
-- ML lifecycle tracked with MLflow or Weights & Biases, including drift detection and monthly performance reports.
-- Stress testing and red-team validation ensure resilience under high event volumes.
+## Deployment Environments
+- **Dev:** rapid iteration, synthetic data, lightweight validation.
+- **Pre-Prod:** mirrors production schemas with masked data; full QA suite enabled.
+- **Prod:** high-availability scoring with audit trails and roll-forward/rollback toggles.
 
-## Delivery Milestones
-1. **Phase 1 (Weeks 1–2)**: Bootstrap schemas, ingest mock data, seed test datasets.
-2. **Phase 2 (Weeks 3–4)**: Finalize fusion algorithms and validate signal alignment.
-3. **Phase 3 (Weeks 5–7)**: Implement scoring (ML + rules) and explainability.
-4. **Phase 4 (Weeks 8–10)**: Enable feedback inputs and QA dashboards.
-5. **Phase 5 (Weeks 11–12)**: Integrate CMMS outputs and run end-to-end simulations with performance reviews.
+## Interfaces & Contracts
+- **APIs:** gRPC/REST endpoints for triggering ingestions and retrieving scores.
+- **Schemas:** versioned Avro/Parquet contracts enforced at ingestion and fusion boundaries.
+- **Lineage:** OpenLineage events emitted from ingestion, fusion, and scoring for traceability.
+
+## Reliability & Security
+- Idempotent ingestion jobs with checkpointing to recover from connector failures.
+- Access control via OIDC-backed service accounts and signed artifact promotion.
+- Encryption in transit (TLS) and at rest (KMS-managed keys) across stores.
+
+Refer to the companion docs for detailed ingestion, scoring, QA/audit, and delivery plans.
