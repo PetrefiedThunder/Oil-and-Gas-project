@@ -1,0 +1,7 @@
+# Example application configuration
+app_name = "OG Data Platform"
+environment = "development"
+data_dir = "data"
+model_dir = "models"
+api_prefix = "/api"
+enable_mock_services = true
