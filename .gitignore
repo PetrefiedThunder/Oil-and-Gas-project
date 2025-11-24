@@ -8,3 +8,8 @@ __pycache__/
 .pytest_cache/
 .idea/
 .vscode/
+
+# Build artifacts
+*.egg-info/
+dist/
+build/

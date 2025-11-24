@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Iterable, List
 
 from mlpe.models import DetectionSource, LeakEvent, Location
@@ -25,4 +25,4 @@ class FusionEngine:
         if not timestamps:
             return 0
         latest = max(timestamps)
-        return int((datetime.utcnow() - latest).total_seconds())
+        return int((datetime.now(timezone.utc) - latest).total_seconds())
