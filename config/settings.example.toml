@@ -1,7 +1,19 @@
-# Example application configuration
-app_name = "OG Data Platform"
+# Example application configuration for MLPE (Methane Leak Prioritization Engine)
+# Copy this to .env or use environment variables to override defaults
+
+# Application Settings
+app_name = "MLPE - Methane Leak Prioritization Engine"
 environment = "development"
+log_level = "INFO"
+
+# Data Storage Paths
 data_dir = "data"
 model_dir = "models"
-api_prefix = "/api"
+
+# API Configuration
+api_prefix = ""  # No prefix needed, routes at root level
+enable_cors = true
+
+# Development Settings
 enable_mock_services = true
+debug_mode = true
