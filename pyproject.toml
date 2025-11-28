@@ -3,10 +3,10 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "oil-and-gas-platform"
+name = "mlpe"
 version = "0.1.0"
-description = "Baseline FastAPI service for the Oil and Gas data platform"
-authors = [{name = "OG Team", email = "team@example.com"}]
+description = "Methane Leak Prioritization Engine (MLPE) - ML platform for ingesting, scoring, and ranking methane leak detections"
+authors = [{name = "MLPE Team", email = "team@example.com"}]
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -22,9 +22,9 @@ dev = [
 ]
 
 [tool.setuptools]
-package-dir = {"" = "app"}
+package-dir = {"" = "src"}
 [tool.setuptools.packages.find]
-where = ["app"]
+where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

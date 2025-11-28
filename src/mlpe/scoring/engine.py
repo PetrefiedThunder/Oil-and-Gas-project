@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from mlpe.models import LeakEvent, RankedLeak, RankedLeakResponse
@@ -29,4 +29,4 @@ class ScoreEngine:
                 )
             )
 
-        return RankedLeakResponse(site_id=site_id, generated_at=datetime.utcnow(), leaks=ranked)
+        return RankedLeakResponse(site_id=site_id, generated_at=datetime.now(timezone.utc), leaks=ranked)

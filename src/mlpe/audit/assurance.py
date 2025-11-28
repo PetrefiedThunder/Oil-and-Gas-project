@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List
 
 
@@ -9,7 +9,7 @@ class AuditLog:
         self._entries: List[Dict[str, str]] = []
 
     def record(self, message: str, event_id: str) -> Dict[str, str]:
-        entry = {"event_id": event_id, "message": message, "recorded_at": datetime.utcnow().isoformat()}
+        entry = {"event_id": event_id, "message": message, "recorded_at": datetime.now(timezone.utc).isoformat()}
         self._entries.append(entry)
         return entry
 

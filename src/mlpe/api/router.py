@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from fastapi import APIRouter
@@ -31,7 +31,7 @@ leak_events: List[LeakEvent] = []
 
 @api_router.get("/health")
 def healthcheck() -> dict:
-    return {"status": "ok", "timestamp": datetime.utcnow().isoformat()}
+    return {"status": "ok", "timestamp": datetime.now(timezone.utc).isoformat()}
 
 
 @api_router.post("/ingest/scada", response_model=LeakEvent)
@@ -65,13 +65,13 @@ def _seed_demo_events() -> List[LeakEvent]:
         DetectionSource(
             source_type="sensor",
             confidence=0.82,
-            observed_at=datetime.utcnow(),
+            observed_at=datetime.now(timezone.utc),
             metadata={"coordinates": sample_location.dict()},
         ),
         DetectionSource(
             source_type="satellite",
             confidence=0.71,
-            observed_at=datetime.utcnow(),
+            observed_at=datetime.now(timezone.utc),
             metadata={"coordinates": sample_location.dict()},
         ),
     ]
