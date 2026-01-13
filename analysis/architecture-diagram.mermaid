@@ -1,0 +1,115 @@
+%% MLPE - Methane Leak Prioritization Engine
+%% Dependency Architecture Diagram
+%% Generated: 2026-01-13
+
+graph TB
+    subgraph External["External Dependencies"]
+        FASTAPI["fastapi>=0.110"]
+        PYDANTIC["pydantic>=2.7"]
+        UVICORN["uvicorn>=0.23"]
+        PYTEST["pytest>=7.4 (dev)"]
+        HTTPX["httpx>=0.27 (dev)"]
+    end
+
+    subgraph Tests["Test Layer"]
+        TEST_APP["tests/test_app.py<br/>45 lines"]
+    end
+
+    subgraph App["Application Entry"]
+        APP["src/mlpe/app.py<br/>19 lines<br/>Coupling: 15"]
+    end
+
+    subgraph API["API Layer"]
+        ROUTER["src/mlpe/api/router.py<br/>78 lines<br/>Coupling: 85<br/>⚠️ HUB FILE"]
+    end
+
+    subgraph Services["Service Layer"]
+        INGEST["ingestion/pipeline.py<br/>25 lines"]
+        FUSION["normalization/fusion.py<br/>28 lines"]
+        SCORE["scoring/engine.py<br/>32 lines"]
+        FEEDBACK["feedback/manager.py<br/>17 lines"]
+        AUDIT["audit/assurance.py<br/>17 lines"]
+        RATIONALE["explainability/rationale.py<br/>11 lines"]
+    end
+
+    subgraph Models["Data Layer"]
+        MODELS["src/mlpe/models.py<br/>48 lines<br/>Coupling: 75<br/>⚠️ HIGH COUPLING"]
+    end
+
+    %% Test dependencies
+    TEST_APP --> APP
+    TEST_APP -.-> FASTAPI
+    TEST_APP -.-> HTTPX
+
+    %% App dependencies
+    APP --> ROUTER
+    APP -.-> FASTAPI
+
+    %% Router dependencies (HUB)
+    ROUTER --> INGEST
+    ROUTER --> FUSION
+    ROUTER --> SCORE
+    ROUTER --> FEEDBACK
+    ROUTER --> AUDIT
+    ROUTER --> RATIONALE
+    ROUTER --> MODELS
+    ROUTER -.-> FASTAPI
+    ROUTER -.-> PYDANTIC
+
+    %% Service dependencies
+    INGEST --> MODELS
+    FUSION --> MODELS
+    SCORE --> MODELS
+    FEEDBACK --> MODELS
+    RATIONALE --> MODELS
+
+    %% External dependencies for models
+    MODELS -.-> PYDANTIC
+
+    %% Styling
+    classDef external fill:#e1f5fe,stroke:#01579b
+    classDef test fill:#fff3e0,stroke:#e65100
+    classDef app fill:#e8f5e9,stroke:#1b5e20
+    classDef api fill:#ffebee,stroke:#b71c1c
+    classDef service fill:#f3e5f5,stroke:#4a148c
+    classDef models fill:#fff8e1,stroke:#ff6f00
+
+    class FASTAPI,PYDANTIC,UVICORN,PYTEST,HTTPX external
+    class TEST_APP test
+    class APP app
+    class ROUTER api
+    class INGEST,FUSION,SCORE,FEEDBACK,AUDIT,RATIONALE service
+    class MODELS models
+
+---
+
+%% Import Flow Diagram
+graph LR
+    subgraph ImportFlow["Import Chain (Longest Path = 4)"]
+        T["test_app.py"] --> A["app.py"] --> R["router.py"] --> M["models.py"]
+    end
+
+---
+
+%% Coupling Heatmap
+graph TD
+    subgraph CouplingScore["Coupling Score Heatmap"]
+        C85["router.py: 85 🔴"]
+        C75["models.py: 75 🟠"]
+        C15["app.py: 15 🟢"]
+        C15B["service modules: 10-15 🟢"]
+    end
+
+---
+
+%% Anti-Pattern Locations
+graph TB
+    subgraph AntiPatterns["Anti-Pattern Locations"]
+        direction TB
+
+        AP1["📍 router.py:29<br/>leak_events: List = []<br/>⚠️ MUTABLE GLOBAL STATE"]
+
+        AP2["📍 router.py:23-28<br/>Module-level instantiation<br/>⚠️ PREVENTS DI"]
+
+        AP3["📍 router.py:69,75<br/>.dict() usage<br/>⚠️ PYDANTIC DEPRECATED"]
+    end

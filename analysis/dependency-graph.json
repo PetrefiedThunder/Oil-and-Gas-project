@@ -1,0 +1,240 @@
+{
+  "metadata": {
+    "generated_at": "2026-01-13",
+    "project": "MLPE - Methane Leak Prioritization Engine",
+    "total_files": 18,
+    "total_python_files": 18,
+    "total_lines": 320
+  },
+  "external_dependencies": {
+    "runtime": {
+      "fastapi": {"version": ">=0.110", "used_by": ["src/mlpe/app.py", "src/mlpe/api/router.py", "tests/test_app.py"]},
+      "uvicorn": {"version": ">=0.23", "used_by": []},
+      "pydantic": {"version": ">=2.7", "used_by": ["src/mlpe/models.py", "src/mlpe/api/router.py"]}
+    },
+    "dev": {
+      "pytest": {"version": ">=7.4", "used_by": ["tests/test_app.py"]},
+      "httpx": {"version": ">=0.27", "used_by": ["tests/test_app.py"]}
+    },
+    "stdlib": ["datetime", "typing"]
+  },
+  "files": {
+    "src/mlpe/__init__.py": {
+      "lines": 0,
+      "imports": [],
+      "imported_by": [],
+      "external_deps": [],
+      "exports": [],
+      "side_effects": false,
+      "coupling_score": 0,
+      "notes": "Empty package marker"
+    },
+    "src/mlpe/app.py": {
+      "lines": 19,
+      "imports": ["mlpe.api.router"],
+      "imported_by": ["tests/test_app.py"],
+      "external_deps": ["fastapi"],
+      "exports": ["create_app", "app"],
+      "side_effects": true,
+      "side_effect_detail": "Module-level app instantiation: app = create_app()",
+      "coupling_score": 15,
+      "notes": "Application entry point, creates FastAPI instance"
+    },
+    "src/mlpe/models.py": {
+      "lines": 48,
+      "imports": [],
+      "imported_by": [
+        "src/mlpe/api/router.py",
+        "src/mlpe/ingestion/pipeline.py",
+        "src/mlpe/normalization/fusion.py",
+        "src/mlpe/scoring/engine.py",
+        "src/mlpe/explainability/rationale.py",
+        "src/mlpe/feedback/manager.py"
+      ],
+      "external_deps": ["pydantic", "datetime", "typing"],
+      "exports": [
+        "Location",
+        "DetectionSource",
+        "LeakEvent",
+        "RankedLeak",
+        "RankedLeakResponse",
+        "FeedbackItem"
+      ],
+      "side_effects": false,
+      "coupling_score": 75,
+      "notes": "Central data model hub - HIGH COUPLING"
+    },
+    "src/mlpe/api/__init__.py": {
+      "lines": 0,
+      "imports": [],
+      "imported_by": [],
+      "external_deps": [],
+      "exports": [],
+      "side_effects": false,
+      "coupling_score": 0,
+      "notes": "Empty package marker"
+    },
+    "src/mlpe/api/router.py": {
+      "lines": 78,
+      "imports": [
+        "mlpe.audit.assurance",
+        "mlpe.explainability.rationale",
+        "mlpe.feedback.manager",
+        "mlpe.ingestion.pipeline",
+        "mlpe.models",
+        "mlpe.normalization.fusion",
+        "mlpe.scoring.engine"
+      ],
+      "imported_by": ["src/mlpe/app.py"],
+      "external_deps": ["fastapi", "pydantic", "datetime", "typing"],
+      "exports": [
+        "IngestPayload",
+        "api_router",
+        "healthcheck",
+        "ingest_scada",
+        "ranked_leaks",
+        "submit_feedback",
+        "_seed_demo_events"
+      ],
+      "side_effects": true,
+      "side_effect_detail": "Module-level instantiation of service objects: IngestionPipeline, FusionEngine, ScoreEngine, FeedbackManager, AuditLog, RationaleBuilder; mutable global state: leak_events list",
+      "coupling_score": 85,
+      "notes": "HUB FILE - orchestrates all domain modules, highest import count (7)"
+    },
+    "src/mlpe/audit/__init__.py": {
+      "lines": 0,
+      "imports": [],
+      "imported_by": [],
+      "external_deps": [],
+      "exports": [],
+      "side_effects": false,
+      "coupling_score": 0,
+      "notes": "Empty package marker"
+    },
+    "src/mlpe/audit/assurance.py": {
+      "lines": 17,
+      "imports": [],
+      "imported_by": ["src/mlpe/api/router.py"],
+      "external_deps": ["datetime", "typing"],
+      "exports": ["AuditLog"],
+      "side_effects": false,
+      "coupling_score": 10,
+      "notes": "Leaf node - no internal dependencies"
+    },
+    "src/mlpe/explainability/__init__.py": {
+      "lines": 0,
+      "imports": [],
+      "imported_by": [],
+      "external_deps": [],
+      "exports": [],
+      "side_effects": false,
+      "coupling_score": 0,
+      "notes": "Empty package marker"
+    },
+    "src/mlpe/explainability/rationale.py": {
+      "lines": 11,
+      "imports": ["mlpe.models"],
+      "imported_by": ["src/mlpe/api/router.py"],
+      "external_deps": ["typing"],
+      "exports": ["RationaleBuilder"],
+      "side_effects": false,
+      "coupling_score": 15,
+      "notes": "Depends on models for RankedLeak type"
+    },
+    "src/mlpe/feedback/__init__.py": {
+      "lines": 0,
+      "imports": [],
+      "imported_by": [],
+      "external_deps": [],
+      "exports": [],
+      "side_effects": false,
+      "coupling_score": 0,
+      "notes": "Empty package marker"
+    },
+    "src/mlpe/feedback/manager.py": {
+      "lines": 17,
+      "imports": ["mlpe.models"],
+      "imported_by": ["src/mlpe/api/router.py"],
+      "external_deps": ["typing"],
+      "exports": ["FeedbackManager"],
+      "side_effects": false,
+      "coupling_score": 15,
+      "notes": "Depends on models for FeedbackItem type"
+    },
+    "src/mlpe/ingestion/__init__.py": {
+      "lines": 0,
+      "imports": [],
+      "imported_by": [],
+      "external_deps": [],
+      "exports": [],
+      "side_effects": false,
+      "coupling_score": 0,
+      "notes": "Empty package marker"
+    },
+    "src/mlpe/ingestion/pipeline.py": {
+      "lines": 25,
+      "imports": ["mlpe.models"],
+      "imported_by": ["src/mlpe/api/router.py"],
+      "external_deps": ["typing"],
+      "exports": ["IngestionPipeline"],
+      "side_effects": false,
+      "coupling_score": 15,
+      "notes": "Depends on models for DetectionSource type"
+    },
+    "src/mlpe/normalization/__init__.py": {
+      "lines": 0,
+      "imports": [],
+      "imported_by": [],
+      "external_deps": [],
+      "exports": [],
+      "side_effects": false,
+      "coupling_score": 0,
+      "notes": "Empty package marker"
+    },
+    "src/mlpe/normalization/fusion.py": {
+      "lines": 28,
+      "imports": ["mlpe.models"],
+      "imported_by": ["src/mlpe/api/router.py"],
+      "external_deps": ["datetime", "typing"],
+      "exports": ["FusionEngine"],
+      "side_effects": false,
+      "coupling_score": 15,
+      "notes": "Depends on models for DetectionSource, LeakEvent, Location types"
+    },
+    "src/mlpe/scoring/__init__.py": {
+      "lines": 0,
+      "imports": [],
+      "imported_by": [],
+      "external_deps": [],
+      "exports": [],
+      "side_effects": false,
+      "coupling_score": 0,
+      "notes": "Empty package marker"
+    },
+    "src/mlpe/scoring/engine.py": {
+      "lines": 32,
+      "imports": ["mlpe.models"],
+      "imported_by": ["src/mlpe/api/router.py"],
+      "external_deps": ["datetime", "typing"],
+      "exports": ["ScoreEngine"],
+      "side_effects": false,
+      "coupling_score": 15,
+      "notes": "Depends on models for LeakEvent, RankedLeak, RankedLeakResponse types"
+    },
+    "tests/test_app.py": {
+      "lines": 45,
+      "imports": ["mlpe.app"],
+      "imported_by": [],
+      "external_deps": ["fastapi.testclient"],
+      "exports": ["client", "test_healthcheck", "test_ingest_scada", "test_ranked_leaks"],
+      "side_effects": true,
+      "side_effect_detail": "Module-level TestClient instantiation: client = TestClient(app)",
+      "coupling_score": 10,
+      "notes": "Test file - imports app entry point"
+    }
+  },
+  "dependency_chains": {
+    "longest_chain": ["tests/test_app.py", "src/mlpe/app.py", "src/mlpe/api/router.py", "src/mlpe/models.py"],
+    "chain_length": 4
+  }
+}
